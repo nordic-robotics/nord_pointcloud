@@ -33,12 +33,14 @@ seg.setOptimizeCoefficients (true);
 seg.setModelType (pcl::SACMODEL_PLANE);
 seg.setMethodType (pcl::SAC_RANSAC);
 seg.setDistanceThreshold (0.01);
-seg.setAxis(Eigen::Vector3f(0,-1,0));
+seg.setAxis(Eigen::Vector3f(0,1,0));
 
 seg.setInputCloud (cloud.makeShared ());
 seg.segment (inliers, coefficients);
 if (coefficients.values[0]==coefficients.values[0]){
 acc.push_back(valarray<float> (coefficients.values.data(),coefficients.values.size()));
+cout << acc.size() << endl;
+
 }
 // Publish the model coefficients
 pcl_msgs::ModelCoefficients ros_coefficients;
@@ -49,17 +51,18 @@ int
 main (int argc, char** argv)
 {
   // Initialize ROS
-  ros::init (argc, argv, "my_pcl_tutorial");
+  ros::init (argc, argv, "calibration");
   ros::NodeHandle nh;
 
   // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub = nh.subscribe ("/camera/depth/points", 1, cloud_cb);
 
   // Create a ROS publisher for the output model coefficients
-  pub = nh.advertise<std_msgs::Bool> ("/nord/img/calibration", 1);
+  pub = nh.advertise<std_msgs::Bool> ("/nord/pointcloud/calibration", 1);
 
   while (ros::ok() && acc.size()<20){
       ros::spinOnce();
+
   }
   std::valarray<float> sum(4);
 
@@ -70,9 +73,10 @@ main (int argc, char** argv)
   sum/=acc.size();
 
   ofstream myfile;
-  myfile.open ("src/nord/nord_img_closestpoint_pointcloud/data/calibration.txt");
+  myfile.open ("src/nord/nord_pointcloud/data/calibration.txt");
   for (size_t i=0;i<sum.size();i++){
   myfile << sum[i] << "\n";
+  cout << sum[i] << endl;
   }
 
   myfile.close();
