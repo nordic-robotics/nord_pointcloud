@@ -23,6 +23,8 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 pcl::PointCloud<pcl::PointXYZ> cloud;
 pcl::fromROSMsg (*input, cloud);
 
+//remove upper half of cloud? not very useful + saves computations.
+
 pcl::ModelCoefficients coefficients;
 pcl::PointIndices inliers;
 // Create the segmentation object
@@ -39,8 +41,6 @@ seg.setInputCloud (cloud.makeShared ());
 seg.segment (inliers, coefficients);
 if (coefficients.values[0]==coefficients.values[0]){
 acc.push_back(valarray<float> (coefficients.values.data(),coefficients.values.size()));
-cout << acc.size() << endl;
-
 }
 // Publish the model coefficients
 pcl_msgs::ModelCoefficients ros_coefficients;
@@ -76,7 +76,6 @@ main (int argc, char** argv)
   myfile.open ("src/nord/nord_pointcloud/data/calibration.txt");
   for (size_t i=0;i<sum.size();i++){
   myfile << sum[i] << "\n";
-  cout << sum[i] << endl;
   }
 
   myfile.close();
