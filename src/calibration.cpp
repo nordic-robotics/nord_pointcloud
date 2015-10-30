@@ -23,7 +23,6 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 pcl::PointCloud<pcl::PointXYZ> cloud;
 pcl::fromROSMsg (*input, cloud);
 
-//remove upper half of cloud? not very useful + saves computations.
 
 pcl::ModelCoefficients coefficients;
 pcl::PointIndices inliers;
@@ -34,7 +33,7 @@ seg.setOptimizeCoefficients (true);
 // Mandatory
 seg.setModelType (pcl::SACMODEL_PLANE);
 seg.setMethodType (pcl::SAC_RANSAC);
-seg.setDistanceThreshold (0.01);
+seg.setDistanceThreshold (0.01f);
 seg.setAxis(Eigen::Vector3f(0,1,0));
 
 seg.setInputCloud (cloud.makeShared ());
@@ -47,8 +46,7 @@ pcl_msgs::ModelCoefficients ros_coefficients;
 pcl_conversions::fromPCL(coefficients, ros_coefficients);
 
 }
-int
-main (int argc, char** argv)
+int main (int argc, char** argv)
 {
   // Initialize ROS
   ros::init (argc, argv, "calibration");
@@ -67,7 +65,7 @@ main (int argc, char** argv)
   std::valarray<float> sum(4);
 
   for (size_t i=0;i<acc.size();i++){
-    sum+=acc[i];
+        sum+=acc[i];
    }
 
   sum/=acc.size();
@@ -75,7 +73,8 @@ main (int argc, char** argv)
   ofstream myfile;
   myfile.open ("src/nord/nord_pointcloud/data/calibration.txt");
   for (size_t i=0;i<sum.size();i++){
-  myfile << sum[i] << "\n";
+        myfile << sum[i] << "\n";
+        //std::cout << sum[i] << endl;
   }
 
   myfile.close();
