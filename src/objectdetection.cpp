@@ -36,8 +36,9 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/centroid.h>
-#include <geometry_msgs/Vector3.h>
-#include <nord_messages/Vector3Array.h>
+#include <nord_messages/Coordinate.h>
+#include <nord_messages/CoordinateArray.h>
+
 
 //using namespace
 using namespace Eigen;
@@ -46,6 +47,12 @@ using namespace std;
 ros::Publisher marker_pub;
 ros::Publisher centroid_pub;
 uint32_t shape = visualization_msgs::Marker::CUBE;
+
+float a;
+float b;
+float c;
+float d;
+
 
 //can be set to true if you want to skip calibration!
 bool rdy=true;
@@ -78,8 +85,14 @@ ec.setSearchMethod (tree);
 ec.setInputCloud (filteredCloudObjectsDepth);
 ec.extract (cluster_indices);
 
+static Eigen::Matrix<float,3,4> P;
+P << 574.0527954101562, 0.0, 319.5, 0.0,
+     0.0, 574.0527954101562, 239.5, 0.0,
+     0.0, 0.0, 1.0, 0.0;
+
+
 int j = 0;
-nord_messages::Vector3Array centroids_msgs;
+nord_messages::CoordinateArray message;
 for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it)
 {
     //for each cluster create a cloud and compute a centroid
@@ -118,13 +131,29 @@ for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (
     vec.y=-centroid(0);
     vec.z = -centroid(1);
 
-    centroids_msgs.centroids.push_back(vec);
+    Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    transform.translation() << 0.0f, d, 0.0f;
+    transform.rotate(AngleAxisf(acos(abs(b)), Vector3f::UnitX()));
+    Eigen::Vector3f in= transform*Eigen::Vector3f(centroid(0),centroid(1), centroid(2));
+    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in(0),in(1),in(2), 1);
+    imagecoords=imagecoords/imagecoords[2];
+    //std::cout << imagecoords[0] << "," << imagecoords[1] << endl;
+
+    nord_messages::Coordinate add;
+    add.x=centroid(0);
+    add.y=centroid(1);
+    add.z=centroid(2);
+    add.xp=imagecoords(0);
+    add.yp=imagecoords(1);
+    message.data.push_back(add);
+
+
     //next object in loop
     j++;
 
 }
 
-centroid_pub.publish(centroids_msgs);
+centroid_pub.publish(message);
 }
 
 //Wait for calibration, when this message is received we wil start generation of the clouds
@@ -143,9 +172,15 @@ int main (int argc, char** argv){
   ros::Subscriber sub=nh.subscribe ("/nord/pointcloud/processed_objectdebris", 1, cloud_cb);
   ros::Subscriber sub2 = nh.subscribe ("/nord/pointcloud/calibration", 1, run);
 
+  //get calibration data
+  ifstream indata;
+  indata.open("src/nord/nord_pointcloud/data/calibration.txt");
+  indata >> a >> b >> c >> d;
+  indata.close();
+
   //publishers
   marker_pub = nh.advertise<visualization_msgs::Marker>("/nord/pointcloud/visualization_marker", 1);
-  centroid_pub = nh.advertise<nord_messages::Vector3Array>("/nord/pointcloud/centroids",1);
+  centroid_pub = nh.advertise<nord_messages::CoordinateArray>("/nord/pointcloud/centroids",1);
 
   // Spin
   while(ros::ok())
