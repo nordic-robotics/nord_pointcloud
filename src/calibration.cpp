@@ -12,73 +12,82 @@
 #include <valarray>
 #include <vector>
 
-using namespace std;
-std::vector <valarray<float> >acc;
-ros::Publisher pub;
+//tweekable
+uint number=10;
+
+//global var
+std::vector <std::valarray<float> >acc;
 
 void
 cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 {
 // Convert the sensor_msgs/PointCloud2 data to pcl/PointCloud
-pcl::PointCloud<pcl::PointXYZ> cloud;
-pcl::fromROSMsg (*input, cloud);
+  pcl::PointCloud<pcl::PointXYZ> cloud;
+  pcl::fromROSMsg (*input, cloud);
 
 
-pcl::ModelCoefficients coefficients;
-pcl::PointIndices inliers;
-// Create the segmentation object
-pcl::SACSegmentation<pcl::PointXYZ> seg;
-// Optional
-seg.setOptimizeCoefficients (true);
-// Mandatory
-seg.setModelType (pcl::SACMODEL_PLANE);
-seg.setMethodType (pcl::SAC_RANSAC);
-seg.setDistanceThreshold (0.01f);
-seg.setAxis(Eigen::Vector3f(0,1,0));
+//RANSAC fit the floor to the biggest horizontal plane (closest to plan with normals below (0,1,0) attain coefficients and inliers for that plane)
+  pcl::ModelCoefficients coefficients;
+  pcl::PointIndices inliers;
+  pcl::SACSegmentation<pcl::PointXYZ> seg;
+  seg.setOptimizeCoefficients (true);
+  seg.setModelType (pcl::SACMODEL_PLANE);
+  seg.setMethodType (pcl::SAC_RANSAC);
+  seg.setDistanceThreshold (0.01f);
+  seg.setAxis(Eigen::Vector3f(0,1,0));
+  seg.setInputCloud (cloud.makeShared());
+//can we avoid saving inliers? Null-pointer?
+  seg.segment (inliers, coefficients);
 
-seg.setInputCloud (cloud.makeShared ());
-seg.segment (inliers, coefficients);
-if (coefficients.values[0]==coefficients.values[0]){
-acc.push_back(valarray<float> (coefficients.values.data(),coefficients.values.size()));
+//is not NaN
+  if (coefficients.values[0]==coefficients.values[0]){
+    acc.push_back(std::valarray<float> (coefficients.values.data(),coefficients.values.size()));
+    std::cout << "." <<std::flush;
+
+  }
 }
-// Publish the model coefficients
-pcl_msgs::ModelCoefficients ros_coefficients;
-pcl_conversions::fromPCL(coefficients, ros_coefficients);
 
-}
-int main (int argc, char** argv)
-{
+int main (int argc, char** argv){
   // Initialize ROS
   ros::init (argc, argv, "calibration");
   ros::NodeHandle nh;
 
   // Create a ROS subscriber for the input point cloud
-  ros::Subscriber sub = nh.subscribe ("/camera/depth/points", 1, cloud_cb);
+  ros::Subscriber sub = nh.subscribe("/camera/depth/points", 1, cloud_cb);
 
-  // Create a ROS publisher for the output model coefficients
-  pub = nh.advertise<std_msgs::Bool> ("/nord/pointcloud/calibration", 1);
+  // Create a ROS publisher for the output that its rdy
+  ros::Publisher pub = nh.advertise<std_msgs::Bool> ("/nord/pointcloud/calibration", 1);
 
-  while (ros::ok() && acc.size()<20){
+  std::cout << "Calibrating" << std::flush;
+
+  //get 5 mesurements of the plan
+  while (ros::ok() && acc.size()<number){
       ros::spinOnce();
-
   }
+
+  std::cout << std::endl;
+
+  //then average each component 
   std::valarray<float> sum(4);
-
   for (size_t i=0;i<acc.size();i++){
-        sum+=acc[i];
-   }
-
+    sum+=acc[i];
+  }
   sum/=acc.size();
 
-  ofstream myfile;
+  //create the calibration textfile
+  std::ofstream myfile;
   myfile.open ("src/nord/nord_pointcloud/data/calibration.txt");
   for (size_t i=0;i<sum.size();i++){
-        myfile << sum[i] << "\n";
-        //std::cout << sum[i] << endl;
+    myfile << sum[i] << "\n";
+    //std::cout << sum[i] << endl;
   }
-
   myfile.close();
+
+  //create message and publish to rdy
   std_msgs::Bool run;
   run.data=true;
   pub.publish(run);
+
+  std::cout << "Done!" << std::endl;
+
 }

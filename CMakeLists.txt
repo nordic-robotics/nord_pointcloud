@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(nord_pointcloud)
-#set(CMAKE_CXX_FLAGS "--std=c++11 ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O3 -Wall ${CMAKE_CXX_FLAGS}")
 
 find_package(PCL REQUIRED)
 find_package(pcl_ros REQUIRED)
