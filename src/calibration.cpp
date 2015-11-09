@@ -13,7 +13,7 @@
 #include <vector>
 
 //tweekable
-uint number=30;
+uint number=10;
 
 //global var
 std::vector <std::valarray<float> >acc;
@@ -48,6 +48,11 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 }
 
 int main (int argc, char** argv){
+
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_exposure True");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_white_balance True");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 0");
+
   // Initialize ROS
   ros::init (argc, argv, "calibration");
   ros::NodeHandle nh;
@@ -90,9 +95,9 @@ int main (int argc, char** argv){
 
   std::cout << "Done!" << std::endl;
 
-  // system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_exposure False");
-  // system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_white_balance False");
-  // system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 25");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_exposure False");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_white_balance False");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 29");
 
 
 

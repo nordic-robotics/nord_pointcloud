@@ -237,9 +237,5 @@ int main (int argc, char** argv){
   //img_pub = nh.advertise<sensor_msgs::PointCloud2>("/nord/pointcloud/depth",1);
 
 
-  // Spin
-  while(ros::ok())
-  {
-    ros::spinOnce();
-  }
+  ros::spin();
 }

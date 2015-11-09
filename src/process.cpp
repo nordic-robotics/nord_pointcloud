@@ -25,14 +25,30 @@ float d;
 
 //can be set to true if you want to skip calibration!
 bool rdy=true;
- 
+
+//droprate
+uint k=1;
+//state
+uint j=0;
+
 //publishers
 ros::Publisher pub;
 
 void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
+
+
 //wait for calibration. 
 if (!rdy){
     return;
+}
+j++;
+if (j==k)
+{
+  j=0;
+}
+else
+{
+  return;
 }
 
 //Recive timestamp
@@ -98,9 +114,5 @@ int main (int argc, char** argv){
   //publishers
   pub = nh.advertise<sensor_msgs::PointCloud2> ("/nord/pointcloud/processed", 1);
 
-  // Spin
-  while(ros::ok())
-  {
-    ros::spinOnce();
-  }
+  ros::spin();
 }
