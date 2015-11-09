@@ -13,7 +13,7 @@
 #include <vector>
 
 //tweekable
-uint number=10;
+uint number=30;
 
 //global var
 std::vector <std::valarray<float> >acc;
@@ -22,8 +22,8 @@ void
 cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
 {
 // Convert the sensor_msgs/PointCloud2 data to pcl/PointCloud
-  pcl::PointCloud<pcl::PointXYZ> cloud;
-  pcl::fromROSMsg (*input, cloud);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+  pcl::fromROSMsg (*input, *cloud);
 
 
 //RANSAC fit the floor to the biggest horizontal plane (closest to plan with normals below (0,1,0) attain coefficients and inliers for that plane)
@@ -34,8 +34,8 @@ cloud_cb (const sensor_msgs::PointCloud2ConstPtr& input)
   seg.setModelType (pcl::SACMODEL_PLANE);
   seg.setMethodType (pcl::SAC_RANSAC);
   seg.setDistanceThreshold (0.01f);
-  seg.setAxis(Eigen::Vector3f(0,1,0));
-  seg.setInputCloud (cloud.makeShared());
+  seg.setAxis(Eigen::Vector3f(0,-1,0));
+  seg.setInputCloud (cloud);
 //can we avoid saving inliers? Null-pointer?
   seg.segment (inliers, coefficients);
 
@@ -60,7 +60,7 @@ int main (int argc, char** argv){
 
   std::cout << "Calibrating" << std::flush;
 
-  //get 5 mesurements of the plan
+  //get assigned mesurements of the plan
   while (ros::ok() && acc.size()<number){
       ros::spinOnce();
   }
@@ -79,7 +79,7 @@ int main (int argc, char** argv){
   myfile.open ("src/nord/nord_pointcloud/data/calibration.txt");
   for (size_t i=0;i<sum.size();i++){
     myfile << sum[i] << "\n";
-    //std::cout << sum[i] << endl;
+    std::cout << sum[i] << std::endl;
   }
   myfile.close();
 
@@ -89,5 +89,11 @@ int main (int argc, char** argv){
   pub.publish(run);
 
   std::cout << "Done!" << std::endl;
+
+  // system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_exposure False");
+  // system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_white_balance False");
+  // system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 25");
+
+
 
 }
