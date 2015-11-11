@@ -35,3 +35,7 @@ target_link_libraries(calibration ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
 target_link_libraries(objectdetection ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
 target_link_libraries(process ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
 
+add_executable(cleverwallremoval src/cleverwallremoval.cpp)
+add_dependencies(cleverwallremoval ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(cleverwallremoval ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
+
