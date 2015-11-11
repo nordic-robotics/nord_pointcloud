@@ -14,7 +14,6 @@
 #include <pcl/features/normal_3d.h>
 #include <pcl/kdtree/kdtree.h>
 #include <pcl_conversions/pcl_conversions.h>
-
 #include <pcl/segmentation/extract_clusters.h>
 #include <pcl/common/centroid.h>
 #include <nord_messages/Coordinate.h>
@@ -22,6 +21,10 @@
 #include <pcl/filters/project_inliers.h>
 #include <pcl/surface/concave_hull.h>
 
+
+#include <pcl/features/normal_3d.h>
+#include <pcl/features/vfh.h>
+#include <pcl/point_representation.h>
 //tweekable parameters
   //debug 
 
@@ -32,7 +35,7 @@ float upperlimitserach=0.8f;
 float ClusterTolerance=0.04f;
 ros::Publisher marker_pub;
 ros::Publisher centroid_pub;
-// ros::Publisher img_pub;
+//ros::Publisher img_pub;
 
 typedef pcl::PointXYZ pointtype;
 
@@ -45,6 +48,35 @@ float d;
 //can be set to true if you want to skip calibration!
 bool rdy=true;
 bool debug=true;
+
+std::vector<float> vhf(const pcl::PointCloud<pointtype>::Ptr object){
+  pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
+  pcl::PointCloud<pcl::VFHSignature308> descriptor;
+ 
+  // Estimate the normals.
+  pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normalEstimation;
+  normalEstimation.setInputCloud(object);
+  normalEstimation.setRadiusSearch(0.03);
+  pcl::search::KdTree<pcl::PointXYZ>::Ptr kdtree(new pcl::search::KdTree<pcl::PointXYZ>);
+  normalEstimation.setSearchMethod(kdtree);
+  normalEstimation.compute(*normals);
+ 
+  // VFH estimation object.
+  pcl::VFHEstimation<pcl::PointXYZ, pcl::Normal, pcl::VFHSignature308> vfh;
+  vfh.setInputCloud(object);
+  vfh.setInputNormals(normals);
+  vfh.setSearchMethod(kdtree);
+  // Optionally, we can normalize the bins of the resulting histogram,
+  // using the total number of points.
+  vfh.setNormalizeBins(true);
+  // Also, we can normalize the SDC with the maximum size found between
+  // the centroid and any of the cluster's points.
+  vfh.setNormalizeDistance(true);
+  vfh.compute(descriptor);
+  //std::cout << descriptor.size() << std::endl;
+  std::vector<float> arr(descriptor.points[0].histogram, descriptor.points[0].histogram + 308);
+  return arr;
+}
 
 void debugmakers(const nord_messages::CoordinateArray& message){
   //generate a maker for each cluter(object or debris)
@@ -150,6 +182,15 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     for (std::vector<int>::const_iterator pit = it->indices.begin (); pit != it->indices.end (); ++pit)
       cloud_cluster->points.push_back(filteredCloudObjectsDepth->points[*pit]);
 
+    
+    //coordinate message
+    Eigen::VectorXd centroid;    
+    pcl::computeNDCentroid(*cloud_cluster, centroid);
+    geometry_msgs::Vector3 vec;
+    vec.x=centroid(1);
+    vec.y=-centroid(0);
+    vec.z = -centroid(2);
+
     //prioject particles to ground plane
     for (uint p=0;p<cloud_cluster->points.size();p++){
       cloud_cluster->points[p].y=0;
@@ -166,15 +207,9 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     for(uint i=0; i<cloud_hull.points.size(); i++){
       vec0.x=cloud_hull.points[i].z;
       vec0.y=-cloud_hull.points[i].x;
-      add.hull.push_back(vec0);    }
+      add.hull.push_back(vec0);    
+    }
 
-    //coordinate message
-    Eigen::VectorXd centroid;    
-    pcl::computeNDCentroid(*cloud_cluster, centroid);
-    geometry_msgs::Vector3 vec;
-    vec.x=centroid(1);
-    vec.y=-centroid(0);
-    vec.z = -centroid(2);
 
     //matrix for camera
     static Eigen::Matrix<float,3,4> P;
@@ -196,6 +231,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     add.z=-centroid(1);
     add.xp=imagecoords(0);
     add.yp=imagecoords(1);
+    add.VFH=vhf(cloud_cluster);
     message.data.push_back(add);
     message.stamp=timestamp;
 
