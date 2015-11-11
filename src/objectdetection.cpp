@@ -56,7 +56,7 @@ std::vector<float> vhf(const pcl::PointCloud<pointtype>::Ptr object){
   // Estimate the normals.
   pcl::NormalEstimation<pcl::PointXYZ, pcl::Normal> normalEstimation;
   normalEstimation.setInputCloud(object);
-  normalEstimation.setRadiusSearch(0.03);
+  normalEstimation.setRadiusSearch(0.01);
   pcl::search::KdTree<pcl::PointXYZ>::Ptr kdtree(new pcl::search::KdTree<pcl::PointXYZ>);
   normalEstimation.setSearchMethod(kdtree);
   normalEstimation.compute(*normals);
@@ -191,6 +191,13 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     vec.y=-centroid(0);
     vec.z = -centroid(2);
 
+    nord_messages::Vector2 vec0;
+    nord_messages::Coordinate add;
+    add.VFH=vhf(cloud_cluster);
+
+
+
+
     //prioject particles to ground plane
     for (uint p=0;p<cloud_cluster->points.size();p++){
       cloud_cluster->points[p].y=0;
@@ -202,8 +209,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     chull.reconstruct (cloud_hull);
 
 
-    nord_messages::Vector2 vec0;
-    nord_messages::Coordinate add;
+
     for(uint i=0; i<cloud_hull.points.size(); i++){
       vec0.x=cloud_hull.points[i].z;
       vec0.y=-cloud_hull.points[i].x;
@@ -231,7 +237,6 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     add.z=-centroid(1);
     add.xp=imagecoords(0);
     add.yp=imagecoords(1);
-    add.VFH=vhf(cloud_cluster);
     message.data.push_back(add);
     message.stamp=timestamp;
 
@@ -264,7 +269,9 @@ int main (int argc, char** argv){
   ros::NodeHandle nh;
 
   //subscribers
-  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
+  // ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
+  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
+
   ros::Subscriber sub2 = nh.subscribe ("/nord/pointcloud/calibration", 1, run);
 
   //publishers

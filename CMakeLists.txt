@@ -39,3 +39,7 @@ add_executable(cleverwallremoval src/cleverwallremoval.cpp)
 add_dependencies(cleverwallremoval ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(cleverwallremoval ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
 
+add_executable(gatherdata src/gatherdata.cpp)
+add_dependencies(gatherdata ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(gatherdata ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
+

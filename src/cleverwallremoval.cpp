@@ -27,8 +27,8 @@
 
 //tweaking!!!!
 uint a=2; // amount of consideration to varraince in y or x (depending on direction)
-unit b=0.01; // amount of fixed size (width of wall in cm. OBS! this half of width )
-unit c=1; //amount of consideration of variance in theta. (0 now, may be useful later...tweak it?)
+uint b=0.01; // amount of fixed size (width of wall in cm. OBS! this half of width )
+uint c=1; //amount of consideration of variance in theta. (0 now, may be useful later...tweak it?)
 
 ros::Publisher no_wall_pub;
 nord_messages::PoseEstimate pose;
