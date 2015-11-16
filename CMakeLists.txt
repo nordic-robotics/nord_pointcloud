@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(nord_pointcloud)
-set(CMAKE_CXX_FLAGS "-O3 -Wall ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "-O3 -Wall -Wno-unused-result ${CMAKE_CXX_FLAGS}")
 
 find_package(PCL REQUIRED)
 find_package(pcl_ros REQUIRED)
@@ -12,6 +12,12 @@ find_package(catkin REQUIRED COMPONENTS
   pcl_ros
   nord_messages
 )
+
+find_package(HDF5)
+find_package(FLANN)
+include_directories(${FLANN_INCLUDE_DIRS})
+include_directories(${HDF5_INCLUDE_DIR})
+
 
 catkin_package(
 CATKIN_DEPENDS message_runtime nord_messages
@@ -43,3 +49,6 @@ add_executable(gatherdata src/gatherdata.cpp)
 add_dependencies(gatherdata ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(gatherdata ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
 
+add_executable(flann src/flann.cpp)
+add_dependencies(flann ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(flann ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY})
