@@ -140,9 +140,6 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
       return;
   }
 
-  //Recive timestamp
-  ros::Time timestamp= cloud_msg->header.stamp;
-
   //Recived message
   pcl::PointCloud<pointtype>::Ptr not_transformed_cloud (new pcl::PointCloud<pointtype>());;
   pcl::fromROSMsg (*cloud_msg,*not_transformed_cloud);
@@ -238,7 +235,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     add.xp=imagecoords(0);
     add.yp=imagecoords(1);
     message.data.push_back(add);
-    message.stamp=timestamp;
+    message.header=cloud_msg->header;
 
     //next object in loop
     j++;
