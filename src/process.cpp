@@ -14,7 +14,7 @@
 
 //parameters for tweeking
 float upper_limit= 0.1;
-float voxel_size=0.01;
+float voxel_size=0.005;
 typedef pcl::PointXYZ pointtype;
 
 //typing
@@ -65,9 +65,15 @@ voxel_grid.filter (inital_cloud);
 // Rotation (and a little bit of translation)
 pcl::PointCloud<pointtype>::Ptr transformed_cloud(new pcl::PointCloud<pointtype>());
 Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+
 transform.rotate(Eigen::AngleAxisf(-std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
+pcl::PointCloud<pointtype>::Ptr mellan_cloud(new pcl::PointCloud<pointtype>());
+
+pcl::transformPointCloud(inital_cloud, *mellan_cloud, transform);
+
+transform = Eigen::Affine3f::Identity();
 transform.translation() << 0.0f, -d, 0.0f;
-pcl::transformPointCloud(inital_cloud, *transformed_cloud, transform);
+pcl::transformPointCloud(*mellan_cloud, *transformed_cloud, transform);
 
 //// Filter object for objects (is a filter in height removes NaN). 
 pcl::PointCloud<pointtype> filteredCloudObjects;
@@ -106,7 +112,7 @@ int main (int argc, char** argv){
   ros::NodeHandle nh;
 
   //subscribers
-  ros::Subscriber sub=nh.subscribe ("/camera/depth/points", 1, cloud_cb);
+  ros::Subscriber sub=nh.subscribe ("/camera/depth_registered/points", 1, cloud_cb);
   ros::Subscriber sub2 = nh.subscribe ("/nord/pointcloud/calibration", 1, run);
 
   //publishers

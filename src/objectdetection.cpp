@@ -28,11 +28,11 @@
 //tweekable parameters
   //debug 
 
-int lowerlimitcluster=20;
-int upperlimitcluster=100;
+int lowerlimitcluster=40;
+int upperlimitcluster=400;
 float lowerlimitserach=0.4f;
 float upperlimitserach=0.8f;
-float ClusterTolerance=0.04f;
+float ClusterTolerance=0.02f;
 ros::Publisher marker_pub;
 ros::Publisher centroid_pub;
 //ros::Publisher img_pub;
@@ -186,9 +186,9 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     Eigen::VectorXd centroid;    
     pcl::computeNDCentroid(*cloud_cluster, centroid);
     geometry_msgs::Vector3 vec;
-    vec.x=centroid(1);
+    vec.x=centroid(2);
     vec.y=-centroid(0);
-    vec.z = -centroid(2);
+    vec.z = -centroid(1);
 
     nord_messages::Vector2 vec0;
     nord_messages::Coordinate add;
@@ -218,22 +218,23 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 
     //matrix for camera
     static Eigen::Matrix<float,3,4> P;
-    P << 574.0527954101562, 0.0, 319.5, 0.0,
-    0.0, 574.0527954101562, 239.5, 0.0,
-    0.0, 0.0, 1.0, 0.0;  
+     P << 574.0527954101562, 0.0, 319.5, 0.0,
+     0.0, 574.0527954101562, 239.5, 0.0,
+     0.0, 0.0, 1.0, 0.0;  
 
     //rotate back to image coorindates
     Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-    
-
     transform.translation() << 0.0f, d, 0.0f;
+
+    Eigen::Vector3f in1 = transform * Eigen::Vector3f(centroid(0),centroid(1), centroid(2));
+    
+    transform =  Eigen::Affine3f::Identity();
+
     transform.rotate(Eigen::AngleAxisf(std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
     
+    Eigen::Vector3f in2 = transform * Eigen::Vector3f(in1(0),in1(1), in1(2));
 
-    Eigen::Vector3f in= transform * Eigen::Vector3f(centroid(0),centroid(1), centroid(2));
-
-
-    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in(0),in(1),in(2), 1);
+    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in2(0),in2(1),in2(2), 1);
     imagecoords=imagecoords/imagecoords[2];
 
     //populate message 
