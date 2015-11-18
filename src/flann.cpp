@@ -8,7 +8,7 @@
 #include <flann/flann.h>
 #include <flann/io/hdf5.h>
 #include <nord_messages/Classification.h>
-#include <nord_messages/ClassificationSrv.h>
+#include <nord_messages/FlannSrv.h>
 #include <iostream>
 #include <fstream>
 #include <cassert>
@@ -50,20 +50,26 @@ std::string elect(const flann::Matrix<int>& k_indices, const flann::Matrix<float
     return max.first;
 }
 
-bool classify_shape(nord_messages::ClassificationSrv::Request& req,
-                    nord_messages::ClassificationSrv::Response& res)
+bool classify_shape(nord_messages::FlannSrv::Request& req,
+                    nord_messages::FlannSrv::Response& res)
 {
     flann::Matrix<int> k_indices(new int[num_neighbours], 1, num_neighbours);
     flann::Matrix<float> k_distances(new float[num_neighbours], 1, num_neighbours);
 
-    for (size_t i = 0; i < req.centroids.data.size(); i++)
+    std::map<std::string, int> counts;
+    for (size_t i = 0; i < req.data.size(); i++)
     {
-        nearest_search(req.centroids.data[i].features.vfh, k_indices, k_distances);
-        nord_messages::Classification c;
-        c.loc.x = req.centroids.data[i].x;
-        c.loc.y = req.centroids.data[i].y;
-        c.name.data = elect(k_indices, k_distances);
-        res.classifications.data.push_back(c);
+        nearest_search(req.data[i].vfh, k_indices, k_distances);
+        std::string name = elect(k_indices, k_distances);
+        counts[name]++;
+    }
+
+    for (std::map<std::string, int>::iterator it = counts.begin(); it != counts.end(); ++it)
+    {
+        std_msgs::String name;
+        name.data = it->first;
+        res.names.push_back(name);
+        res.counts.push_back(it->second);
     }
 
     delete[] k_indices.ptr();
