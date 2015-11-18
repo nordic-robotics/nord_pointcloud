@@ -51,8 +51,6 @@ else
   return;
 }
 
-//Recive timestamp
-ros::Time timestamp= cloud_msg->header.stamp;
 //Recived message
 pcl::PointCloud<pointtype>::Ptr not_transformed_cloud(new pcl::PointCloud<pointtype>());
 pcl::fromROSMsg (*cloud_msg, *not_transformed_cloud);
@@ -81,7 +79,7 @@ pass.filter (filteredCloudObjects);
 
 //publish!
 sensor_msgs::PointCloud2 cloud_out_objects;
-cloud_out_objects.header.stamp=timestamp;
+cloud_out_objects.header = cloud_msg->header;
 pcl::toROSMsg (filteredCloudObjects, cloud_out_objects);
 pub.publish (cloud_out_objects);
 }

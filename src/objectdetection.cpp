@@ -173,6 +173,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 
   uint j = 0;
   nord_messages::CoordinateArray message;
+  message.header=cloud_msg->header;
+
   for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin (); it != cluster_indices.end (); ++it){
     //for each cluster create a cloud and compute a centroid
     pcl::PointCloud<pointtype>::Ptr cloud_cluster(new pcl::PointCloud<pointtype>());
