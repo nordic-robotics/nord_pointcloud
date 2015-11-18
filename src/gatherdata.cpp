@@ -60,7 +60,7 @@ if(!pressed)
  pcl::PointCloud <pcl::VFHSignature308> point;
  point.push_back(pcl::VFHSignature308());
 for(uint k=0;k<308;k++){
- point[0].histogram[k]=centroids->data[0].VFH[k];
+ point[0].histogram[k]=centroids->data[0].features.vfh[k];
 }
  std::stringstream out;
  out << ros::package::getPath("nord_pointcloud") << "/data/" << name <<  recorded << ".pcd";

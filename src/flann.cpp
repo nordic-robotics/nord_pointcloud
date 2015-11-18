@@ -58,7 +58,7 @@ bool classify_shape(nord_messages::ClassificationSrv::Request& req,
 
     for (size_t i = 0; i < req.centroids.data.size(); i++)
     {
-        nearest_search(req.centroids.data[i].VFH, k_indices, k_distances);
+        nearest_search(req.centroids.data[i].features.vfh, k_indices, k_distances);
         nord_messages::Classification c;
         c.loc.x = req.centroids.data[i].x;
         c.loc.y = req.centroids.data[i].y;

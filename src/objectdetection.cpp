@@ -49,7 +49,7 @@ float d;
 bool rdy=true;
 bool debug=true;
 
-std::vector<float> vhf(const pcl::PointCloud<pointtype>::Ptr object){
+std::vector<float> vfh(const pcl::PointCloud<pointtype>::Ptr object){
   pcl::PointCloud<pcl::Normal>::Ptr normals(new pcl::PointCloud<pcl::Normal>);
   pcl::PointCloud<pcl::VFHSignature308> descriptor;
  
@@ -190,7 +190,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 
     nord_messages::Vector2 vec0;
     nord_messages::Coordinate add;
-    add.VFH=vhf(cloud_cluster);
+    add.features.vfh=vfh(cloud_cluster);
 
 
 
