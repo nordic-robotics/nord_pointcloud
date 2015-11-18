@@ -222,9 +222,15 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 
     //rotate back to image coorindates
     Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+    
+
     transform.translation() << 0.0f, d, 0.0f;
-    transform.rotate(Eigen::AngleAxisf(acos(abs(b)), Eigen::Vector3f::UnitX()));
-    Eigen::Vector3f in= transform*Eigen::Vector3f(centroid(0),centroid(1), centroid(2));
+    transform.rotate(Eigen::AngleAxisf(std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
+    
+
+    Eigen::Vector3f in= transform * Eigen::Vector3f(centroid(0),centroid(1), centroid(2));
+
+
     Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in(0),in(1),in(2), 1);
     imagecoords=imagecoords/imagecoords[2];
 
