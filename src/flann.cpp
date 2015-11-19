@@ -189,8 +189,14 @@ int main(int argc, char** argv){
     ros::init(argc, argv, "flann");
     ros::NodeHandle n;
 
-    names.push_back("redcube");
-    names.push_back("redcylinder");
+    names.push_back("cross");
+    names.push_back("cube");
+    names.push_back("cylinder");
+    names.push_back("roundedcube");
+    names.push_back("sphere");
+    names.push_back("star");
+    names.push_back("triangle");
+
 
     classes = load_examples(names);
 
