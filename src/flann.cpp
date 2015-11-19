@@ -213,9 +213,8 @@ int main(int argc, char** argv){
                                 + "/data/kdtree.idx"));
     indices->buildIndex();
 
-    ros::ServiceServer srv = n.advertiseService("shape_classification_service",
+    ros::ServiceServer srv = n.advertiseService("/nord/pointcloud/shape_classification_service",
                                                 classify_shape);
-
     ros::spin();
 
     return 0;
