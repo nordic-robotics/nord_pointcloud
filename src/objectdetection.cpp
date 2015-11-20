@@ -234,15 +234,15 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     
     Eigen::Vector3f in2 = transform * Eigen::Vector3f(in1(0),in1(1), in1(2));
 
-    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in2(0),in2(1),in2(2), 1);
+    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in2(2),-in2(0),-in2(1), 1);
     imagecoords=imagecoords/imagecoords[2];
 
     //populate message 
     add.x=centroid(2);
     add.y=-centroid(0);
     add.z=-centroid(1);
-    add.xp=imagecoords(0);
-    add.yp=imagecoords(1);
+    add.xp=640-imagecoords(1);
+    add.yp=imagecoords(0);
     message.data.push_back(add);
     message.header=cloud_msg->header;
 
