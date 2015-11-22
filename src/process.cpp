@@ -11,10 +11,11 @@
 #include <iostream>
 #include <fstream>
 #include <Eigen/Geometry>
+#include "ros/package.h"
 
 //parameters for tweeking
 float upper_limit= 0.1;
-float voxel_size=0.005;
+float voxel_size=0.0075;
 typedef pcl::PointXYZ pointtype;
 
 //typing
@@ -99,7 +100,7 @@ rdy=true;
 
 //get calibration data
 std::ifstream indata;
-indata.open("src/nord/nord_pointcloud/data/calibration.txt");
+indata.open((ros::package::getPath("nord_pointcloud") + "/data/calibration.txt").c_str());
 indata >> a >> b >> c >> d;
 indata.close();
 std::cout<< "Calibration received" << std::endl;

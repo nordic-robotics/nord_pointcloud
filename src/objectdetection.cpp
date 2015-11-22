@@ -20,6 +20,7 @@
 #include <nord_messages/CoordinateArray.h>
 #include <pcl/filters/project_inliers.h>
 #include <pcl/surface/concave_hull.h>
+#include "ros/package.h"
 
 
 #include <pcl/features/normal_3d.h>
@@ -233,10 +234,14 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     transform.rotate(Eigen::AngleAxisf(std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
     
     Eigen::Vector3f in2 = transform * Eigen::Vector3f(in1(0),in1(1), in1(2));
+    std::cout << "-------------" <<std::endl;
+    std::cout << "(" << in2(0) << "," << in2(1) << "," << "," << in2(2) << ")" << std::endl;
 
     Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in2(2),-in2(0),-in2(1), 1);
-    imagecoords=imagecoords/imagecoords[2];
-
+    std::cout << "(" << imagecoords(0) << "," << imagecoords(1) << "," << imagecoords(2) << ")" << std::endl;
+    //imagecoords=imagecoords/imagecoords[2];
+    std::cout << "(" << imagecoords(0) << "," << imagecoords(1) << "," << imagecoords(2) << ")" << std::endl;
+    std::cout << "-------------" <<std::endl;
     //populate message 
     add.x=centroid(2);
     add.y=-centroid(0);
@@ -262,7 +267,7 @@ void run (const std_msgs::Bool& run)
 
   //get calibration data
   std::ifstream indata;
-  indata.open("src/nord/nord_pointcloud/data/calibration.txt");
+  indata.open((ros::package::getPath("nord_pointcloud") + "/data/calibration.txt").c_str());
   indata >> a >> b >> c >> d;
   indata.close();
 

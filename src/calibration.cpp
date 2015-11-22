@@ -11,7 +11,7 @@
 #include <fstream>
 #include <valarray>
 #include <vector>
-
+#include "ros/package.h"
 //tweekable
 uint number=10;
 
@@ -81,7 +81,7 @@ int main (int argc, char** argv){
 
   //create the calibration textfile
   std::ofstream myfile;
-  myfile.open ("src/nord/nord_pointcloud/data/calibration.txt");
+  myfile.open ( (ros::package::getPath("nord_pointcloud") + "/data/calibration.txt").c_str());
   for (size_t i=0;i<sum.size();i++){
     myfile << sum[i] << "\n";
     std::cout << sum[i] << std::endl;
