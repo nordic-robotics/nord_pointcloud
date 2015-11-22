@@ -197,7 +197,6 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
 
 
 
-
     //prioject particles to ground plane
     for (uint p=0;p<cloud_cluster->points.size();p++){
       cloud_cluster->points[p].y=0;
