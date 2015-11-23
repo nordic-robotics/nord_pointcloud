@@ -97,7 +97,7 @@ int main (int argc, char** argv){
 
   system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_exposure False");
   system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_white_balance False");
-  system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 29");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 24");
 
 
 
