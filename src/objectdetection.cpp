@@ -224,30 +224,29 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
      0.0, 0.0, 1.0, 0.0;  
 
     //rotate back to image coorindates
+
+
     Eigen::Affine3f transform = Eigen::Affine3f::Identity();
     transform.translation() << 0.0f, d, 0.0f;
 
+    //Eigen::Vector3f test = Eigen::Vector3f(5,10.9206,3.04152);
+
     Eigen::Vector3f in1 = transform * Eigen::Vector3f(centroid(0),centroid(1), centroid(2));
-    
     transform =  Eigen::Affine3f::Identity();
 
     transform.rotate(Eigen::AngleAxisf(std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
     
     Eigen::Vector3f in2 = transform * Eigen::Vector3f(in1(0),in1(1), in1(2));
-    std::cout << "-------------" <<std::endl;
-    std::cout << "(" << in2(0) << "," << in2(1) << "," << "," << in2(2) << ")" << std::endl;
 
-    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in2(2),-in2(0),-in2(1), 1);
-    std::cout << "(" << imagecoords(0) << "," << imagecoords(1) << "," << imagecoords(2) << ")" << std::endl;
-    //imagecoords=imagecoords/imagecoords[2];
-    std::cout << "(" << imagecoords(0) << "," << imagecoords(1) << "," << imagecoords(2) << ")" << std::endl;
-    std::cout << "-------------" <<std::endl;
+    Eigen::Vector3f imagecoords = P * Eigen::Vector4f(in2(0),in2(1),in2(2), 1);
+    imagecoords=imagecoords/imagecoords[2];
+
     //populate message 
     add.x=centroid(2);
     add.y=-centroid(0);
     add.z=-centroid(1);
-    add.xp=640-imagecoords(1);
-    add.yp=imagecoords(0);
+    add.xp=imagecoords(0);
+    add.yp=imagecoords(1);
     message.data.push_back(add);
     message.header=cloud_msg->header;
 

@@ -64,6 +64,7 @@ pcl::fromROSMsg (*cloud_msg, *not_transformed_cloud);
 // Rotation
 pcl::PointCloud<pointtype> mellan_cloud;
 Eigen::Affine3f transform = Eigen::Affine3f::Identity();
+
 transform.rotate(Eigen::AngleAxisf(-std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
 pcl::transformPointCloud(*not_transformed_cloud, mellan_cloud, transform);
 
