@@ -192,8 +192,8 @@ int main(int argc, char** argv){
     names.push_back("cross");
     names.push_back("cube");
     names.push_back("cylinder");
-    names.push_back("roundedcube");
-    names.push_back("sphere");
+    names.push_back("hollowcube");
+    names.push_back("ball");
     names.push_back("star");
     names.push_back("triangle");
 

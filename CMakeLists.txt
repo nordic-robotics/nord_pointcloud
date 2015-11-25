@@ -32,6 +32,10 @@ add_definitions(${PCL_DEFINITIONS})
 add_executable(calibration src/calibration.cpp)
 add_executable(process src/process.cpp)
 add_executable(objectdetection src/objectdetection.cpp)
+add_executable(testClassification src/testClassification.cpp)
+add_dependencies(testClassification ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(testClassification ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
+
 
 add_dependencies(objectdetection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 add_dependencies(process ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

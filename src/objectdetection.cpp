@@ -29,8 +29,8 @@
 //tweekable parameters
   //debug 
 
-int lowerlimitcluster=40;
-int upperlimitcluster=400;
+int lowerlimitcluster=20;
+int upperlimitcluster=500;
 float lowerlimitserach=0.4f;
 float upperlimitserach=0.8f;
 float ClusterTolerance=0.02f;
