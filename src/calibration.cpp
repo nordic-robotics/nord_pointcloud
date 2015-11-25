@@ -66,8 +66,10 @@ int main (int argc, char** argv){
   std::cout << "Calibrating" << std::flush;
 
   //get assigned mesurements of the plan
+  ros::Rate r(10);
   while (ros::ok() && acc.size()<number){
       ros::spinOnce();
+      r.sleep();
   }
 
   std::cout << std::endl;
@@ -97,7 +99,7 @@ int main (int argc, char** argv){
 
   system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_exposure False");
   system("rosrun dynamic_reconfigure dynparam set /camera/driver auto_white_balance False");
-  system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 24");
+  system("rosrun dynamic_reconfigure dynparam set /camera/driver data_skip 19");
 
 
 
