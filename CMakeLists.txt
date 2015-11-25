@@ -56,3 +56,7 @@ target_link_libraries(gatherdata ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
 add_executable(flann src/flann.cpp)
 add_dependencies(flann ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(flann ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY})
+
+add_executable(evenmorecleverwallremoval2 src/evenmorecleverwallremoval2.cpp)
+add_dependencies(evenmorecleverwallremoval2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(evenmorecleverwallremoval2 ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY})

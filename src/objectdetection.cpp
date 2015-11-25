@@ -278,8 +278,8 @@ int main (int argc, char** argv){
   ros::NodeHandle nh;
 
   //subscribers
-  // ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
-  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
+  // ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
+  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
 
   ros::Subscriber sub2 = nh.subscribe ("/nord/pointcloud/calibration", 1, run);
 
