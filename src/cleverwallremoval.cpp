@@ -1,4 +1,3 @@
-#include <ros/ros.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
 #include <pcl/point_cloud.h>
@@ -22,16 +21,18 @@
 #include <string>
 #include "ros/package.h"
 #include <sstream>
+#include "visualization_msgs/Marker.h"
 #include <fstream>
 
-
+using namespace visualization_msgs;
 //tweaking!!!!
-uint a=2; // amount of consideration to varraince in y or x (depending on direction)
-uint b=0.01; // amount of fixed size (width of wall in cm. OBS! this half of width )
-uint c=1; //amount of consideration of variance in theta. (0 now, may be useful later...tweak it?)
+uint a=4; // amount of consideration to varraince in y or x (depending on direction)
+uint b=0.02; // amount of fixed size (width of wall in cm. OBS! this half of width )
+uint c=0; //amount of consideration of variance in theta. (0 now, may be useful later...tweak it?)
 
 ros::Publisher no_wall_pub;
 nord_messages::PoseEstimate pose;
+ros::Publisher map_pub;
 
 typedef pcl::PointXYZ pointtype;
 
@@ -69,8 +70,8 @@ pcl::ConditionOr<pcl::PointXYZ>::Ptr conditionbox(line linen){
 pcl::ConditionOr<pcl::PointXYZ>::Ptr condition(new pcl::ConditionOr<pcl::PointXYZ>());
 float xmin = std::min(linen.x0,linen.x1)-pose.x.stddev*a-b-pose.x.mean-pose.theta.stddev*c;
 float xmax = std::max(linen.x0,linen.x1)+pose.x.stddev*a+b-pose.x.mean+pose.theta.stddev*c;
-float ymin = std::min(-linen.y0,-linen.y1)-pose.y.stddev*a-b-pose.y.mean-pose.theta.stddev*c;
-float ymax = std::max(-linen.y0,-linen.y1)+pose.y.stddev*a+b-pose.y.mean+pose.theta.stddev*c;
+float ymin = std::min(-linen.y0,-linen.y1)-pose.y.stddev*a-b+pose.y.mean-pose.theta.stddev*c;
+float ymax = std::max(-linen.y0,-linen.y1)+pose.y.stddev*a+b+pose.y.mean+pose.theta.stddev*c;
 condition->addComparison(pcl::FieldComparison<pcl::PointXYZ>::ConstPtr(new pcl::FieldComparison<pcl::PointXYZ>("z", pcl::ComparisonOps::LT, xmin)));
 condition->addComparison(pcl::FieldComparison<pcl::PointXYZ>::ConstPtr(new pcl::FieldComparison<pcl::PointXYZ>("z", pcl::ComparisonOps::GT, xmax)));
 condition->addComparison(pcl::FieldComparison<pcl::PointXYZ>::ConstPtr(new pcl::FieldComparison<pcl::PointXYZ>("x", pcl::ComparisonOps::LT, ymin)));
@@ -79,6 +80,34 @@ condition->addComparison(pcl::FieldComparison<pcl::PointXYZ>::ConstPtr(new pcl::
  return condition;
 }
 
+visualization_msgs::Marker create_map_message(const std::vector<line>& walls)
+{
+    Marker line_list;
+    line_list.id = 2;
+    line_list.type = Marker::LINE_LIST;
+    line_list.color.a = line_list.color.r = line_list.color.g = line_list.color.b = 1.0;
+    line_list.header.frame_id = "camera_depth_frame";
+    line_list.header.stamp = ros::Time::now();
+    line_list.ns = "pf_map";
+    line_list.action = Marker::ADD;
+    line_list.pose.orientation.w = 1.0;
+    line_list.lifetime = ros::Duration();
+    line_list.scale.x = 0.01;
+
+    for (uint i=0;i<walls.size();i++)
+    {
+        geometry_msgs::Point p0, p1;
+        p0.x = walls[i].x0-pose.x.mean;
+        p0.y = walls[i].y0-pose.y.mean;
+        p1.x = walls[i].x1-pose.x.mean;
+        p1.y = walls[i].y1-pose.y.mean;
+        p0.z = p1.z = 0;
+        line_list.points.push_back(p0);
+        line_list.points.push_back(p1);
+    }
+
+    return line_list;
+}
 
 
 
@@ -114,8 +143,8 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
   filter.setKeepOrganized(false);
   filter.filter(filteredCloud);
 
-// std::cout << transformed_cloud->points.size() << std::endl;
-// std::cout << filteredCloud.points.size() << std::endl;
+ std::cout << transformed_cloud->points.size() << std::endl;
+ std::cout << filteredCloud.points.size() << std::endl;
 
   //allign cloud with theta
   pcl::PointCloud<pointtype> return_cloud;
@@ -123,12 +152,13 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
   transform2.rotate(Eigen::AngleAxisf(pose.theta.mean, Eigen::Vector3f::UnitY()));
   pcl::transformPointCloud(filteredCloud, return_cloud, transform2);
 
-
   //publish!
   sensor_msgs::PointCloud2 cloud_out_objects;
   cloud_out_objects.header.stamp=timestamp;
-  pcl::toROSMsg (return_cloud, cloud_out_objects);
+  pcl::toROSMsg (filteredCloud, cloud_out_objects);
   no_wall_pub.publish (cloud_out_objects);
+
+  map_pub.publish(create_map_message(maze));
   
 }
 
@@ -142,12 +172,12 @@ int main (int argc, char** argv){
 
   //subscribers
   ros::Subscriber sub =nh.subscribe ("/nord/pointcloud/processed", 1, cloud_cb);
-  ros::Subscriber guess_pub = nh.subscribe("/nord/estimation/gaussian", 1, filter_cb);
+  ros::Subscriber guess_pub = nh.subscribe("/nord/estimation/pose_estimation", 1, filter_cb);
 
   //publishers
   no_wall_pub = nh.advertise<sensor_msgs::PointCloud2>("/nord/pointcloud/no_wall", 1);
 
-
+  map_pub = nh.advertise<visualization_msgs::Marker>("/nord/map", 1);
 
   ros::spin();
 }
