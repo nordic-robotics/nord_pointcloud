@@ -56,13 +56,22 @@ bool classify_shape(nord_messages::FlannSrv::Request& req,
     flann::Matrix<int> k_indices(new int[num_neighbours], 1, num_neighbours);
     flann::Matrix<float> k_distances(new float[num_neighbours], 1, num_neighbours);
 
+    float min_distance = 100000000000.0f;
     std::map<std::string, int> counts;
     for (size_t i = 0; i < req.data.size(); i++)
     {
         nearest_search(req.data[i].vfh, k_indices, k_distances);
         std::string name = elect(k_indices, k_distances);
         counts[name]++;
+
+        for (size_t j = 0; j < num_neighbours; j++)
+        {
+            if (k_distances[0][j] < min_distance)
+                min_distance = k_distances[0][j];
+        }
     }
+
+    std::cout << "min_distance: " << min_distance << std::endl;
 
     for (std::map<std::string, int>::iterator it = counts.begin(); it != counts.end(); ++it)
     {
