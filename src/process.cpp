@@ -83,12 +83,16 @@ pass.setFilterFieldName ("y");
 pass.setFilterLimits (-upper_limit,-0.01f);
 pass.filter (*filteredCloudObjects);
 
+std::cout << filteredCloudObjects->points.size() << std::endl;
 //voxel
 pcl::PointCloud<pointtype> object_cloud;
 pcl::VoxelGrid<pointtype> voxel_grid;
 voxel_grid.setInputCloud (filteredCloudObjects);
 voxel_grid.setLeafSize (voxel_size, voxel_size, voxel_size);
 voxel_grid.filter (object_cloud);
+
+std::cout << object_cloud.points.size() << std::endl;;
+
 
 //publish!
 sensor_msgs::PointCloud2 cloud_out_objects;
