@@ -40,6 +40,11 @@ ros::Publisher centroid_pub;
 
 typedef pcl::PointXYZ pointtype;
 
+//droprate
+uint k=1;
+//state
+uint j=0;
+
 
 float a;
 float b;
@@ -140,6 +145,16 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
   if (!rdy){
       return;
   }
+
+  j++;
+if (j==k)
+{
+  j=0;
+}
+else
+{
+  return;
+}
 
   //Recived message
   pcl::PointCloud<pointtype>::Ptr not_transformed_cloud (new pcl::PointCloud<pointtype>());;

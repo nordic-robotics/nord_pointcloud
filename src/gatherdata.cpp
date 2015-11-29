@@ -75,8 +75,8 @@ int main (int argc, char** argv){
   ros::NodeHandle nh;
 
   name=std::string(argv[1]);
-  // ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
-  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
+  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
+  //ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
   ros::Subscriber sub2 =nh.subscribe ("nord/pointcloud/centroids", 1, centroids_cb);
 
   ros::Rate R(10);
