@@ -37,15 +37,22 @@ std::string elect(const flann::Matrix<int>& k_indices, const flann::Matrix<float
     for (size_t i = 0; i < num_neighbours; i++)
     {
         uint ix = k_indices[0][i];
-        if (0 < ix && ix < names.size())
-            counts[names[k_indices[0][i]]]++;
+        std::cout << "ix: " << ix << std::endl;
+        if (0 <= ix && ix < names.size())
+        {
+	  //            std::cout << "maybe this happened" << std::endl;
+            counts[names[ix]]++;
+        }
     }
     
-    std::pair<std::string, int> max;
+    std::pair<std::string, int> max("", 0);
     for (std::map<std::string, int>::iterator it = counts.begin(); it != counts.end(); ++it)
     {
         if (it->second >= max.second)
+        {
+	  //            std::cout << "this happened!" << std::endl;
             max = *it;
+        }
     }
     return max.first;
 }
@@ -60,8 +67,12 @@ bool classify_shape(nord_messages::FlannSrv::Request& req,
     std::map<std::string, int> counts;
     for (size_t i = 0; i < req.data.size(); i++)
     {
+        if (req.data[i].vfh.size() == 0)
+            continue;
+
         nearest_search(req.data[i].vfh, k_indices, k_distances);
         std::string name = elect(k_indices, k_distances);
+        std::cout << "elect: " << name << std::endl;
         counts[name]++;
 
         for (size_t j = 0; j < num_neighbours; j++)
@@ -142,6 +153,8 @@ std::vector<vfh_model> load_examples(const std::vector<std::string>& names)
             if (!file_exists(indexed.str()))
                 break;
 
+            std::cout << "loading " << indexed.str() << std::endl;
+
             result.push_back(std::pair<std::string, std::vector<float> >(
                 names[i], load_single_pcd(indexed.str())));
             j++;
@@ -181,8 +194,11 @@ void build()
 
     std::ofstream fs;
     fs.open((ros::package::getPath("nord_pointcloud") + "/data/training_data.list").c_str());
-    for (size_t i = 0; i < classes.size (); ++i)
+    for (size_t i = 0; i < classes.size(); ++i)
+    {
+        std::cout << "saving class " << classes[i].first << std::endl;
         fs << classes[i].first << "\n";
+    }
     fs.close();
 
     flann::Index<flann::ChiSquareDistance<float> > indices_out(data,
