@@ -34,9 +34,8 @@
 #include <boost/thread/thread.hpp>
 
 //tweaking?
-float withindistance =0.03f;
-float thresholdformplane =0.11f; //does this matter? notice no change
-//pubs
+float withindistance =0.02f;
+float thresholdformplane =0.005f; //SHIT IF FUCKED? SET TO 0.01f
 ros::Publisher no_wall_pub;
 typedef pcl::PointXYZ pointtype;
 std::vector<Eigen::VectorXf> v;
@@ -52,7 +51,7 @@ void cloud_cb2(const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     return;
   }
 
-  while(wallcloud_in->points.size()>2){
+  while(wallcloud_in->points.size()>2 && ros::ok()){
   //segmentation
   //std::cout << wallcloud_in->points.size() << std::endl;
   std::vector<int> inliers;
@@ -94,7 +93,7 @@ void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
   pcl::fromROSMsg (*cloud_msg, *not_filtered_cloud);
 
   //std::cout << not_filtered_cloud->points.size() << std::endl;
-
+  std::cout << v.size() << std::endl;
   //evaluate the models from the other pcl
   for (uint i=0; i<v.size(); i++){
   std::vector<int> inliers;
@@ -130,8 +129,8 @@ int main (int argc, char** argv){
   ros::Subscriber sub =nh.subscribe ("/nord/pointcloud/processed", 1, cloud_cb);
   ros::Subscriber sub2=nh.subscribe("/nord/pointcloud/walls", 1, cloud_cb2);
 
+
   //publishers
   no_wall_pub = nh.advertise<sensor_msgs::PointCloud2>("/nord/pointcloud/no_wall", 1);
-
   ros::spin();
 }

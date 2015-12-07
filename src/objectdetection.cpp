@@ -30,7 +30,7 @@
   //debug 
 
 int lowerlimitcluster=20;
-int upperlimitcluster=500;
+int upperlimitcluster=700;
 float lowerlimitserach=0.4f;
 float upperlimitserach=0.8f;
 float ClusterTolerance=0.02f;

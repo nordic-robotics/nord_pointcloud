@@ -7,7 +7,6 @@
 #include <pcl/io/pcd_io.h>
 #include <flann/flann.h>
 #include <flann/io/hdf5.h>
-#include <nord_messages/Classification.h>
 #include <nord_messages/FlannSrv.h>
 #include <iostream>
 #include <fstream>

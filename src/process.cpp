@@ -15,9 +15,12 @@
 #include "nord_messages/Vector2Array.h"
 
 //parameters for tweeking
-float upper_limit= 0.1;
+float upper_limit= 0.10f;
+float lower_limit= 0.16f;
+
 float voxel_size=0.005;
 float voxel_navigation=0.1;
+float voxel_navigation2=0.01;
 typedef pcl::PointXYZ pointtype;
 
 //typing
@@ -83,16 +86,12 @@ pass.setFilterFieldName ("y");
 pass.setFilterLimits (-upper_limit,-0.01f);
 pass.filter (*filteredCloudObjects);
 
-std::cout << filteredCloudObjects->points.size() << std::endl;
 //voxel
 pcl::PointCloud<pointtype> object_cloud;
 pcl::VoxelGrid<pointtype> voxel_grid;
 voxel_grid.setInputCloud (filteredCloudObjects);
 voxel_grid.setLeafSize (voxel_size, voxel_size, voxel_size);
 voxel_grid.filter (object_cloud);
-
-std::cout << object_cloud.points.size() << std::endl;;
-
 
 //publish!
 sensor_msgs::PointCloud2 cloud_out_objects;
@@ -106,8 +105,21 @@ pcl::PointCloud<pointtype>::Ptr filteredWalls(new pcl::PointCloud<pointtype>());
 pcl::PassThrough<pointtype> pass2;
 pass2.setInputCloud (transformed_cloud);
 pass2.setFilterFieldName ("y");
-pass2.setFilterLimits (-0.3f,-0.1f);
+pass2.setFilterLimits (-0.3f,-lower_limit);
 pass2.filter (*filteredWalls);
+
+//voxel
+pcl::PointCloud<pointtype> wall_cloud2;
+pcl::VoxelGrid<pointtype> voxel_grid3;
+voxel_grid3.setInputCloud (filteredWalls);
+voxel_grid3.setLeafSize (voxel_navigation2, voxel_navigation2, voxel_navigation2);
+voxel_grid3.filter (wall_cloud2);
+
+//publish!
+sensor_msgs::PointCloud2 cloud_out_wall;
+cloud_out_wall.header = cloud_msg->header;
+pcl::toROSMsg (wall_cloud2, cloud_out_wall);
+pub2.publish (cloud_out_wall);
 
 //voxel
 pcl::PointCloud<pointtype> wall_cloud;
@@ -125,11 +137,6 @@ for(uint i=0; i<wall_cloud.points.size(); i++){
 }
 
 pub3.publish(arr);
-//publish!
-sensor_msgs::PointCloud2 cloud_out_wall;
-cloud_out_wall.header = cloud_msg->header;
-pcl::toROSMsg (wall_cloud, cloud_out_wall);
-pub2.publish (cloud_out_wall);
 }
 
 
