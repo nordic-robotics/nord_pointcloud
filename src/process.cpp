@@ -20,7 +20,7 @@ float lower_limit= 0.16f;
 
 float voxel_size=0.005;
 float voxel_navigation=0.1;
-float voxel_navigation2=0.01;
+float voxel_navigation2=0.03;
 typedef pcl::PointXYZ pointtype;
 
 //typing

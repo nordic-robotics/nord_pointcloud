@@ -39,8 +39,10 @@ float thresholdformplane =0.005f; //SHIT IF FUCKED? SET TO 0.01f
 ros::Publisher no_wall_pub;
 typedef pcl::PointXYZ pointtype;
 std::vector<Eigen::VectorXf> v;
+int max_planes=11;
 
 void cloud_cb2(const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
+  int counter=0;
   //clear shit
   v.clear();
   //input
@@ -51,7 +53,8 @@ void cloud_cb2(const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
     return;
   }
 
-  while(wallcloud_in->points.size()>2 && ros::ok()){
+  while(wallcloud_in->points.size()>20 && ros::ok() && counter<max_planes){
+  counter++;
   //segmentation
   //std::cout << wallcloud_in->points.size() << std::endl;
   std::vector<int> inliers;

@@ -32,6 +32,7 @@ add_definitions(${PCL_DEFINITIONS})
 add_executable(calibration src/calibration.cpp)
 add_executable(process src/process.cpp)
 add_executable(objectdetection src/objectdetection.cpp)
+add_executable(debrisdetection src/debrisdetection.cpp)
 add_executable(testClassification src/testClassification.cpp)
 add_dependencies(testClassification ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(testClassification ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
@@ -60,3 +61,8 @@ target_link_libraries(flann ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS} ${FLANN_LIBR
 add_executable(evenmorecleverwallremoval2 src/evenmorecleverwallremoval2.cpp)
 add_dependencies(evenmorecleverwallremoval2 ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(evenmorecleverwallremoval2 ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS} ${FLANN_LIBRARIES} ${HDF5_hdf5_LIBRARY})
+
+add_dependencies(debrisdetection ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(debrisdetection ${catkin_LIBRARIES} ${PCL_INCLUDE_DIRS})
+
+

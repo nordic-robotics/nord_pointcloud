@@ -29,11 +29,11 @@
 //tweekable parameters
   //debug 
 
-int lowerlimitcluster=20;
-int upperlimitcluster=700;
+int lowerlimitcluster=200;
+int upperlimitcluster=1500;//700;
 float lowerlimitserach=0.4f;
-float upperlimitserach=0.8f;
-float ClusterTolerance=0.01f;
+float upperlimitserach=1.2f;
+float ClusterTolerance=0.005f;//0.02f;
 ros::Publisher marker_pub;
 ros::Publisher centroid_pub;
 //ros::Publisher img_pub;
@@ -88,8 +88,8 @@ void debugmakers(const nord_messages::CoordinateArray& message){
   //generate a maker for each cluter(object or debris)
   visualization_msgs::Marker marker;
   marker.header.frame_id ="camera_depth_frame";
-  marker.id=1;
-  marker.ns="detected objects";
+  marker.id=1999;
+  marker.ns="detected DEBRIS!?!?";
   marker.header.stamp = ros::Time::now();
   marker.type = visualization_msgs::Marker::CUBE_LIST;   
   marker.pose.orientation.w = 1.0f;
@@ -208,7 +208,7 @@ else
 
     nord_messages::Vector2 vec0;
     nord_messages::Coordinate add;
-    add.features.vfh=vfh(cloud_cluster);
+    //add.features.vfh=vfh(cloud_cluster);
 
 
 
@@ -289,18 +289,18 @@ void run (const std_msgs::Bool& run)
 
 int main (int argc, char** argv){
   // Initialize ROS and cretate a handle
-  ros::init (argc, argv, "objectdetection");
+  ros::init (argc, argv, "debrisdetection");
   ros::NodeHandle nh;
 
   //subscribers
   // ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
-  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/no_wall", 1, cloud_cb);
+  ros::Subscriber sub =nh.subscribe ("nord/pointcloud/processed", 1, cloud_cb);
 
   ros::Subscriber sub2 = nh.subscribe ("/nord/pointcloud/calibration", 1, run);
 
   //publishers
   marker_pub = nh.advertise<visualization_msgs::Marker>("/nord/pointcloud/visualization_marker", 1);
-  centroid_pub = nh.advertise<nord_messages::CoordinateArray>("/nord/pointcloud/centroids",1);
+  centroid_pub = nh.advertise<nord_messages::CoordinateArray>("/nord/pointcloud/debris_test",1);
   //img_pub = nh.advertise<sensor_msgs::PointCloud2>("/nord/pointcloud/depth",1);
 
 
