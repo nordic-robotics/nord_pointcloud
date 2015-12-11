@@ -1,151 +1,176 @@
-﻿#include <ros/ros.h>
+#include <ros/ros.h>
 #include <pcl_ros/point_cloud.h>
 #include <pcl_ros/transforms.h>
-#include <sensor_msgs/PointCloud2.h>
-#include <pcl_conversions/pcl_conversions.h>
-#include <pcl/common/transforms.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/voxel_grid.h>
-#include <pcl/sample_consensus/model_types.h>
-#include <pcl/sample_consensus/method_types.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <std_msgs/Bool.h>
+#include <pcl_conversions/pcl_conversions.h>
+#include <pcl/filters/extract_indices.h>
 #include <pcl/filters/passthrough.h>
-#include <pcl/filters/conditional_removal.h>
-#include <pcl/io/pcd_io.h>
+#include <std_msgs/Bool.h>
 #include <iostream>
-#include <pcl/io/io.h>
-#include <pcl/io/pcd_io.h>
 #include <fstream>
 #include <Eigen/Geometry>
-//using namespace
+#include "ros/package.h"
+#include "nord_messages/Vector2Array.h"
 
-using namespace Eigen;
-using namespace std;
+//parameters for tweeking
+float upper_limit= 0.10f;
+float lower_limit= 0.16f;
 
+float voxel_size=0.005;
+float voxel_navigation=0.1;
+float voxel_navigation2=0.03;
+typedef pcl::PointXYZ pointtype;
 
-ros::Publisher pub;
-ros::Publisher pub2;
-
+//typing
 float a;
 float b;
 float c;
 float d;
-bool rdy;
 
-void
-cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg)
-{
+//can be set to true if you want to skip calibration!
+bool rdy=true;
+
+//droprate
+uint k=1;
+//state
+uint j=0;
+
+//publishers
+ros::Publisher pub;
+ros::Publisher pub2;
+ros::Publisher pub3;
+
+
+void cloud_cb (const sensor_msgs::PointCloud2ConstPtr& cloud_msg){
+
+
+//wait for calibration. 
 if (!rdy){
     return;
 }
-//Container for original & filtered data
-pcl::PCLPointCloud2* cloud = new pcl::PCLPointCloud2();
+j++;
+if (j==k)
+{
+  j=0;
+}
+else
+{
+  return;
+}
 
+//Recived message
+pcl::PointCloud<pointtype>::Ptr not_transformed_cloud(new pcl::PointCloud<pointtype>());
+pcl::fromROSMsg (*cloud_msg, *not_transformed_cloud);
 
-pcl::PCLPointCloud2ConstPtr cloudPtr(cloud);
-pcl::PCLPointCloud2 cloud_filtered;
-// Convert to PCL data type
-pcl_conversions::toPCL(*cloud_msg, *cloud);
-// Perform the actual filtering
-pcl::VoxelGrid<pcl::PCLPointCloud2> sor;
-sor.setInputCloud (cloudPtr);
-sor.setLeafSize (0.01, 0.01, 0.01);
-sor.filter (cloud_filtered);
-
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr not_transformed_cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
-pcl::fromPCLPointCloud2(cloud_filtered, *not_transformed_cloud);
-
-
+// Rotation
+pcl::PointCloud<pointtype> mellan_cloud;
 Eigen::Affine3f transform = Eigen::Affine3f::Identity();
-transform.rotate(AngleAxisf(-acos(abs(b)), Vector3f::UnitX()));
-transform.translation() << 0.0, -d, 0.0;
 
-// Executing the transformation
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr transformed_cloud (new pcl::PointCloud<pcl::PointXYZRGB> ());
-pcl::transformPointCloud(*not_transformed_cloud, *transformed_cloud, transform);
+transform.rotate(Eigen::AngleAxisf(-std::acos(std::abs(b)), Eigen::Vector3f::UnitX()));
+pcl::transformPointCloud(*not_transformed_cloud, mellan_cloud, transform);
 
+// Translation
+pcl::PointCloud<pointtype>::Ptr transformed_cloud(new pcl::PointCloud<pointtype>());
+transform = Eigen::Affine3f::Identity();
+transform.translation() << 0.0f, -d, 0.0f;
+pcl::transformPointCloud(mellan_cloud, *transformed_cloud, transform);
 
-// Filter object.
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr filteredCloud (new pcl::PointCloud<pcl::PointXYZRGB>);
-pcl::PassThrough<pcl::PointXYZRGB> pass;
+//STUFF FOR OBJECT DETECTION
+//// Filter object for objects (is a filter in height removes NaN). 
+pcl::PointCloud<pointtype>::Ptr filteredCloudObjects(new pcl::PointCloud<pointtype>());
+pcl::PassThrough<pointtype> pass;
 pass.setInputCloud (transformed_cloud);
 pass.setFilterFieldName ("y");
-pass.setFilterLimits (-0.3,-0.1);
-//pass.setFilterLimitsNegative (true);
-pass.filter (*filteredCloud);
+pass.setFilterLimits (-upper_limit,-0.01f);
+pass.filter (*filteredCloudObjects);
 
-// Filter object.
-pcl::PointCloud<pcl::PointXYZRGB>::Ptr filteredCloud2 (new pcl::PointCloud<pcl::PointXYZRGB>);
-pcl::PassThrough<pcl::PointXYZRGB> pass2;
+//voxel
+pcl::PointCloud<pointtype> object_cloud;
+pcl::VoxelGrid<pointtype> voxel_grid;
+voxel_grid.setInputCloud (filteredCloudObjects);
+voxel_grid.setLeafSize (voxel_size, voxel_size, voxel_size);
+voxel_grid.filter (object_cloud);
+
+//publish!
+sensor_msgs::PointCloud2 cloud_out_objects;
+cloud_out_objects.header = cloud_msg->header;
+pcl::toROSMsg (object_cloud, cloud_out_objects);
+pub.publish (cloud_out_objects);
+
+//STUFF FOR NAVIGATION
+//// Filter object for objects (is a filter in height removes NaN). 
+pcl::PointCloud<pointtype>::Ptr filteredWalls(new pcl::PointCloud<pointtype>());
+pcl::PassThrough<pointtype> pass2;
 pass2.setInputCloud (transformed_cloud);
 pass2.setFilterFieldName ("y");
-pass2.setFilterLimits (-0.1,-0.01);
-//pass.setFilterLimitsNegative (true);
-pass2.filter (*filteredCloud2);
+pass2.setFilterLimits (-0.3f,-lower_limit);
+pass2.filter (*filteredWalls);
 
-// build the condition
-//pcl::ConditionAnd<pcl::PointXYZRGB>::Ptr range_cond (new pcl::ConditionAnd<pcl::PointXYZRGB> ());
-//range_cond->addComparison (pcl::FieldComparison<pcl::PointXYZRGB>::ConstPtr (new
-//pcl::FieldComparison<pcl::PointXYZRGB> ("y", pcl::ComparisonOps::GT, 0.01)));
-//range_cond->addComparison (pcl::FieldComparison<pcl::PointXYZRGB>::ConstPtr (new
-//   pcl::FieldComparison<pcl::PointXYZRGB> ("y", pcl::ComparisonOps::LT, 0.30)));
+//voxel
+pcl::PointCloud<pointtype> wall_cloud2;
+pcl::VoxelGrid<pointtype> voxel_grid3;
+voxel_grid3.setInputCloud (filteredWalls);
+voxel_grid3.setLeafSize (voxel_navigation2, voxel_navigation2, voxel_navigation2);
+voxel_grid3.filter (wall_cloud2);
 
-// build the filter
-//pcl::ConditionalRemoval<pcl::PointXYZRGB> condrem (range_cond);
-//condrem.setInputCloud (transformed_cloud);
-//condrem.setKeepOrganized(true);
+//publish!
+sensor_msgs::PointCloud2 cloud_out_wall;
+cloud_out_wall.header = cloud_msg->header;
+pcl::toROSMsg (wall_cloud2, cloud_out_wall);
+pub2.publish (cloud_out_wall);
 
-// apply filter
-//condrem.filter (*filteredCloud);
+//voxel
+pcl::PointCloud<pointtype> wall_cloud;
+pcl::VoxelGrid<pointtype> voxel_grid2;
+voxel_grid2.setInputCloud (filteredWalls);
+voxel_grid2.setLeafSize (voxel_navigation, voxel_navigation, voxel_navigation);
+voxel_grid2.filter (wall_cloud);
 
-
-
-sensor_msgs::PointCloud2 output;
-pcl::toROSMsg (*filteredCloud, output);
-
-//to sensor_msgs
-sensor_msgs::PointCloud2 output2;
-pcl::toROSMsg (*filteredCloud2, output2);
-
-// Publish the data.
-pub2.publish (output2);
-
-
-// Publish the data.
-pub.publish (output);
+nord_messages::Vector2 vec0;
+nord_messages::Vector2Array arr;
+for(uint i=0; i<wall_cloud.points.size(); i++){
+  vec0.x=wall_cloud.points[i].z;
+  vec0.y=-wall_cloud.points[i].x;
+  arr.data.push_back(vec0);    
 }
 
-void
-run (const std_msgs::Bool& run)
+pub3.publish(arr);
+}
+
+
+
+//Wait for calibration, when this message is received we wil start generation of the clouds
+void run (const std_msgs::Bool& run)
 {
+
+//set so that we will start process data in the other callback
 rdy=true;
-}
 
-int
-main (int argc, char** argv)
-{
-  // Initialize ROS
+//get calibration data
+std::ifstream indata;
+indata.open((ros::package::getPath("nord_pointcloud") + "/data/calibration.txt").c_str());
+indata >> a >> b >> c >> d;
+indata.close();
+std::cout<< "Calibration received" << std::endl;
+
+}
+int main (int argc, char** argv){
+
+  // Initialize ROS and cretate a handle
   ros::init (argc, argv, "process");
   ros::NodeHandle nh;
+
+  //subscribers
   ros::Subscriber sub=nh.subscribe ("/camera/depth_registered/points", 1, cloud_cb);
-
-
-  ifstream indata;
-  indata.open("src/nord/nord_pointcloud/data/calibration.txt");
-  indata >> a >> b >> c >> d;
-
-  indata.close();
-
-  // Create a ROS subscriber for the input point cloud
   ros::Subscriber sub2 = nh.subscribe ("/nord/pointcloud/calibration", 1, run);
 
-  // Create a ROS publisher for the output point cloud
-  pub2 = nh.advertise<sensor_msgs::PointCloud2> ("/nord/pointcloud/processed_withoutwalls", 1);
-  // Create a ROS publisher for the output point cloud
-  pub = nh.advertise<sensor_msgs::PointCloud2> ("/nord/pointcloud/processed_walls", 1);
+  //publishers
+  pub = nh.advertise<sensor_msgs::PointCloud2> ("/nord/pointcloud/processed", 1);
+  pub2 = nh.advertise<sensor_msgs::PointCloud2> ("/nord/pointcloud/walls", 1);
+  pub3 = nh.advertise<nord_messages::Vector2Array> ("nord/pointcloud/wallsvector",1);
 
-  // Spin
-  ros::spin ();
+
+  ros::spin();
 }
